@@ -44,15 +44,23 @@ function App() {
   const [map, setMap] = React.useState(null);
   const [data, setData] = React.useState({});
 
-  const onClientService = () => {
+  const removeLayers = () => {
+    map.layers.forEach(function (layer) { // Se remueven todos las capas del mapa
+      map.remove(layer);
+    });
+  }
+
+  const onClientService = () => { // Se genera un featureLayer usando la url y divipola suministrado
     if (!map || !data?.divipola) return;
+
+    removeLayers();
 
     loadModules(['esri/layers/FeatureLayer',], { css: true })
       .then(([FeatureLayer]) => {
 
         const baseUrl = 'https://mapas.igac.gov.co/server/rest/services/carto/ProductosCartograficosVigentes/MapServer/0';
         const keyword = 'DIVIPOLA';
-        const query = `?fpjson&where=${keyword}%20%3D%20%27${data?.divipola}%27`;
+        const query = `?f=pjson&where=${keyword}%20%3D%20%27${data?.divipola}%27`;
 
         const featureLayer = new FeatureLayer({
           url: `${baseUrl}${query}`,
@@ -65,22 +73,81 @@ function App() {
       });
   }
 
-  const onServerService = async () => {
+  const onServerService = async () => { // Se genera un featureLayer usando la url y divipola suministrado
     if (!data?.divipola) return;
 
-    const url = 'http://localhost:3001/api';
-    const body = { divipola: data?.divipola };
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    };
+    // const url = 'http://localhost:3001/api';
+    // const body = { divipola: data?.divipola };
+    // const options = {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(body),
+    // };
 
-    const response = await fetch(url, options)
-    const json = await response.json();
-    console.log(json);
+    // const response = await fetch(url, options)
+    // const json = await response.json();
+
+    //! No se pudieron probar los gráficos a traves de la API
+    // if (response.ok) {
+    //   loadModules(['esri/layers/FeatureLayer', 'esri/Graphic', 'esri/geometry/Point', 'esri/layers/GraphicsLayer'], { css: true })
+    //     .then(([Graphic, Point, GraphicsLayer]) => {
+
+    //       const graphics = [];
+
+
+    //       json.features.forEach(function (feature) { // Iterar sobre las features en el objeto JSON y crear gráficos
+    //         const graphic = new Graphic({
+    //           geometry: new Point(feature.geometry),
+    //           attributes: feature.attributes,
+    //         });
+
+    //         graphics.push(graphic);
+    //       });
+
+    //       const featureLayer = new GraphicsLayer({ // Crear un FeatureLayer utilizando los gráficos
+    //         graphics: graphics
+    //       });
+
+    //       map.add(featureLayer)
+    //     })
+    //     .catch((err) => {
+    //       console.error(err);
+    //     });
+    // }
+
+    // if (response.ok) {
+    //   loadModules(['esri/layers/FeatureLayer',], { css: true })
+    //     .then(([FeatureLayer]) => {
+
+    //       const featureLayer = new FeatureLayer(json);
+
+    //       map.add(featureLayer)
+    //     })
+    //     .catch((err) => {
+    //       console.error(err);
+    //     });
+    // }
+
+    removeLayers();
+
+    loadModules(['esri/layers/FeatureLayer',], { css: true })
+      .then(([FeatureLayer]) => {
+
+        const baseUrl = "https://services2.arcgis.com/RVvWzU3lgJISqdke/arcgis/rest/services/clasificacionsuelopot/FeatureServer/0";
+        const keyword = "MpCodigo";
+        const query = `?f=pjson&where=${keyword}%20%3D%20%27${data?.divipola}%27`;
+
+        const featureLayer = new FeatureLayer({
+          url: `${baseUrl}${query}`,
+        });
+
+        map.add(featureLayer)
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
 
   return (
@@ -93,8 +160,8 @@ function App() {
             {data?.divipola?.length !== 5 && `Se deben introducir 5 caracteres`}
           </Form.Text>
         </Form.Group>
-        <Button variant='outline-primary' style={{ width: '200px' }} onClick={onClientService}>Servicio web</Button>
-        <Button variant='outline-primary' style={{ width: '200px' }} onClick={onServerService}>Backend</Button>
+        <Button constiant='outline-primary' style={{ width: '200px' }} onClick={onClientService}>Servicio web</Button>
+        <Button constiant='outline-primary' style={{ width: '200px' }} onClick={onServerService}>Backend</Button>
       </div>
       <ColombianMap map={map} setMap={setMap} />
     </div>

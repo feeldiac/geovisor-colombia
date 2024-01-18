@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require('cors');
-// const fetch = require('node-fetch');
+const fetch = require('node-fetch');
 
 const bodyParser = require('body-parser');
 
@@ -10,31 +10,39 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+/* Endpoint que recibe un divipola y retorna la informacion consultada a un directorio de datos de ArcGIS */
 
 app.post("/api", async (req, res) => {
-  const divipola = req.body?.divipola;
+  const divipola = req.body?.divipola; // Se obtiene la divipola suministrada
 
-  if (!divipola) {
+  if (!divipola) { // Se verifica que la divipola esté llegando
     res.status(400).json({ error: "Divipola is required" });
     return;
   }
 
-  console.log(`Divipola: ${divipola}`);
-
   const baseUrl = "https://services2.arcgis.com/RVvWzU3lgJISqdke/arcgis/rest/services/clasificacionsuelopot/FeatureServer/0";
   const keyword = "MpCodigo";
-  const query = `?fpjson&where=${keyword}%20%3D%20%27${divipola}%27`;
+  const query = `?f=pjson&where=${keyword}%20%3D%20%27${divipola}%27`;
 
   const url = `${baseUrl}${query}`;
 
-  const response = await fetch(url)
-  const data = await response.json();
+  try {
+    const response = await fetch(url);
 
-  if (response.ok) {
-    res.status(200).json(data);
-  } else {
+    if (response.ok) { // Se parse la respuesta siempre y cuando la petición sea exitosa
+
+      const data = await response.text();
+      const parsedData = JSON.parse(data);
+
+      res.send(parsedData); // Se envia la respuesta
+
+    } else {
+      res.status(500).json({ error: "Failed to fetch data" });
+    }
+  } catch (error) {
     res.status(500).json({ error: "Failed to fetch data" });
   }
+
 
 })
 
